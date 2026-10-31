@@ -1,6 +1,6 @@
 /*
  * @name: Markdown (CV subset)
- * @description: Parses the Markdown a CV needs: headings, paragraphs, bullet and numbered lists, rules,
+ * @description: Parses the Markdown a CV needs: headings, paragraphs (a line ending in \ or two spaces breaks the line), bullet and numbered lists, rules,
  * **bold**, *italic*, `code` and [links](https://…). Produces plain data that both the web page and the PDF render,
  * so they always match. Raw HTML is never passed through.
  * */
@@ -46,7 +46,17 @@ export function parseMarkdown(source: string): Block[] {
   let list: { ordered: boolean; items: string[] } | null = null;
 
   const flush = () => {
-    if (paragraph.length) blocks.push({ kind: 'paragraph', content: parseInline(paragraph.join(' ')) });
+    if (paragraph.length) {
+      // A line ending in "\" or two spaces keeps its line break; otherwise lines join into one paragraph
+      const text = paragraph
+        .map((line, i) => {
+          const last = i === paragraph.length - 1;
+          if (/(\\| {2,})$/.test(line)) return line.replace(/(\\| +)$/, '') + (last ? '' : '\n');
+          return line + (last ? '' : ' ');
+        })
+        .join('');
+      blocks.push({ kind: 'paragraph', content: parseInline(text) });
+    }
     if (list) blocks.push({ kind: 'list', ordered: list.ordered, items: list.items.map(parseInline) });
     paragraph = [];
     list = null;
@@ -75,7 +85,8 @@ export function parseMarkdown(source: string): Block[] {
       list.items[list.items.length - 1] += ` ${line.trim()}`;
     } else {
       if (list) flush();
-      paragraph.push(line.trim());
+      // Trailing spaces are kept: two of them mean a line break
+      paragraph.push(raw.replace(/^\s+/, '').replace(/\s+$/, (spaces) => (spaces.length >= 2 ? '  ' : '')));
     }
   }
   flush();

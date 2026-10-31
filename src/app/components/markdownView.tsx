@@ -4,7 +4,9 @@ function Inlines({ content }: { content: Inline[] }) {
   return (
     <>
       {content.map((part, index) => {
-        let node: React.ReactNode = part.kind === "text" && part.code ? <code className="font-mono text-[0.95em]">{part.text}</code> : part.text;
+        // Line breaks inside a paragraph become <br />
+        const text = part.text.split("\n").flatMap((piece, i) => (i ? [<br key={i} />, piece] : [piece]));
+        let node: React.ReactNode = part.kind === "text" && part.code ? <code className="font-mono text-[0.95em]">{part.text}</code> : text;
         if (part.italic) node = <em>{node}</em>;
         if (part.bold) node = <strong className="font-FiraSans-Bold text-textColour">{node}</strong>;
         if (part.kind === "link") {
