@@ -1,5 +1,7 @@
 "use client";
 
+import { CURRENCY_SYMBOL } from "@/lib/currency";
+
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
@@ -117,7 +119,7 @@ function ProjectDetails({ data, settings, reload }: { data: JobData; settings: S
   const [saving, setSaving] = useState(false);
   const markup = Number(settings?.hostingMarkupPercent ?? 10);
   // Same sums as the server, which works the fee out again when saving
-  const parsedCosts = costs.map((c) => ({ ...c, amount: Math.round(Number(c.amount.replace(/[£,\s]/g, "")) * 100) || 0 }));
+  const parsedCosts = costs.map((c) => ({ ...c, amount: Math.round(Number(c.amount.replace(/[£€,\s]/g, "")) * 100) || 0 }));
   const fee = hostingFee(parsedCosts, markup);
   const setCost = (index: number, patch: Partial<CostRow>) => setCosts((prev) => prev.map((c, i) => (i === index ? { ...c, ...patch } : c)));
   const set = (key: keyof typeof values, value: string) => setValues((prev) => ({ ...prev, [key]: value }));
@@ -160,7 +162,7 @@ function ProjectDetails({ data, settings, reload }: { data: JobData; settings: S
           <option value="cancelled">Cancelled</option>
         </select>
       </div>
-      <TextField id="p-price" label="Total price (£)" value={values.totalPrice} onChange={(v) => set("totalPrice", v)} />
+      <TextField id="p-price" label={`Total price (${CURRENCY_SYMBOL})`} value={values.totalPrice} onChange={(v) => set("totalPrice", v)} />
       <fieldset className="rounded-lg border border-borderColour p-4 flex flex-col gap-3">
         <legend className="px-1 text-sm font-FiraSans-SemiBold">Payments</legend>
         <div>
@@ -193,7 +195,7 @@ function ProjectDetails({ data, settings, reload }: { data: JobData; settings: S
         {costs.map((cost, index) => (
           <div key={index} className="grid grid-cols-[1fr_80px_130px_auto] gap-2 items-center">
             <input aria-label="Cost name" value={cost.label} maxLength={80} placeholder="e.g. Server (VPS)" onChange={(e) => setCost(index, { label: e.target.value })} className="admin-input py-2!" />
-            <input aria-label="Amount in pounds" value={cost.amount} inputMode="decimal" placeholder="£" onChange={(e) => setCost(index, { amount: e.target.value })} className="admin-input py-2!" />
+            <input aria-label="Amount" value={cost.amount} inputMode="decimal" placeholder={CURRENCY_SYMBOL} onChange={(e) => setCost(index, { amount: e.target.value })} className="admin-input py-2!" />
             <select aria-label="Billing period" value={cost.period} onChange={(e) => setCost(index, { period: e.target.value as CostRow["period"] })} className="admin-input py-2!">
               <option value="month">per month</option>
               <option value="year">per year</option>
@@ -441,7 +443,7 @@ function Milestones({ data, settings, reload }: { data: JobData; settings: SiteS
           )}
         </div>
         <TextField id="m-title" label="Title" required maxLength={150} value={form.title} onChange={(title) => setForm((f) => ({ ...f, title }))} />
-        <TextField id="m-amount" label="Amount (£)" value={form.amount} onChange={(amount) => setForm((f) => ({ ...f, amount }))} placeholder="1500" />
+        <TextField id="m-amount" label={`Amount (${CURRENCY_SYMBOL})`} value={form.amount} onChange={(amount) => setForm((f) => ({ ...f, amount }))} placeholder="1500" />
         <div className="md:col-span-2">
           <TextArea id="m-description" label="What's delivered (shown to the client)" rows={3} maxLength={3000} value={form.description} onChange={(description) => setForm((f) => ({ ...f, description }))} />
         </div>

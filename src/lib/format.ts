@@ -3,19 +3,21 @@
  * @description: Money and date formatting in UK conventions, and the UK timezone maths used by bookings.
  * */
 
+import { CURRENCY } from './currency';
+
 export const TIMEZONE = 'Europe/London';
 
-const gbp = new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP' });
-const gbpWhole = new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP', maximumFractionDigits: 0 });
+const money = new Intl.NumberFormat(CURRENCY === 'EUR' ? 'en-IE' : 'en-GB', { style: 'currency', currency: CURRENCY });
+const moneyWhole = new Intl.NumberFormat(CURRENCY === 'EUR' ? 'en-IE' : 'en-GB', { style: 'currency', currency: CURRENCY, maximumFractionDigits: 0 });
 
 export function formatPence(pence: number) {
-  return pence % 100 === 0 ? gbpWhole.format(pence / 100) : gbp.format(pence / 100);
+  return pence % 100 === 0 ? moneyWhole.format(pence / 100) : money.format(pence / 100);
 }
 
-// Pounds as stored in settings ("3000") → "£3,000"
+// Whole amounts as stored in settings ("3000") → "£3,000" (or "€3,000")
 export function formatPounds(value: string | number) {
   const number = Number(value);
-  return Number.isFinite(number) ? gbpWhole.format(number) : String(value);
+  return Number.isFinite(number) ? moneyWhole.format(number) : String(value);
 }
 
 export function penceToInput(pence: number) {

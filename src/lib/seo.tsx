@@ -9,6 +9,7 @@ import type { CaseStudy } from "./query/caseStudies.query";
 import { GetSiteSettings } from "./query/settings.query";
 import type { SiteSettings } from "./siteSettings";
 import { absoluteUrl, SITE_URL } from "./site";
+import { formatPounds } from "./format";
 
 export const DEFAULT_OG_IMAGE = { url: "/images/og-image.png", width: 1200, height: 630, alt: "Custom software for small businesses" };
 
@@ -63,7 +64,7 @@ export function homeSchema(settings: SiteSettings, description: string) {
         logo: absoluteUrl("/images/logo.png"),
         email: settings.contactEmail || undefined,
         telephone: settings.contactPhone || undefined,
-        priceRange: settings.pricingFrom ? `From £${Number(settings.pricingFrom).toLocaleString("en-GB")}` : undefined,
+        priceRange: settings.pricingFrom ? `From ${formatPounds(settings.pricingFrom)}` : undefined,
         address,
         areaServed: list(settings.areaServed).map((name) => ({ "@type": "Country", name })),
         founder: { "@id": PERSON_ID },

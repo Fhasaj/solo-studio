@@ -6,7 +6,7 @@
 
 import { DEFAULT_CONTRACT_TEMPLATE } from './contractTemplate';
 
-export type SettingType = 'text' | 'textarea' | 'number' | 'url' | 'email' | 'hours' | 'dates';
+export type SettingType = 'text' | 'textarea' | 'number' | 'url' | 'email' | 'hours' | 'dates' | 'select' | 'date';
 
 export interface SettingField {
   key: string;
@@ -19,12 +19,18 @@ export interface SettingField {
   max?: number;
   maxLength?: number;
   pattern?: { regex: RegExp; message: string };
+  // For 'select': [value, label] pairs
+  options?: readonly (readonly [string, string])[];
 }
 
 export const SETTING_GROUPS = {
   profile: { label: 'Your details', description: 'Who you are and where you work. Used across the site, in search results and in emails.' },
   homepage: { label: 'Homepage', description: 'The first thing visitors read.' },
   pricing: { label: 'Pricing & support', description: 'Shown in the pricing section and used in contracts.' },
+  tax: {
+    label: 'Tax and VAT',
+    description: 'Used for your bookkeeping, tax estimates and VAT figures under Money. Estimates only: check them with an accountant.',
+  },
   payments: {
     label: 'Card payments (Stripe)',
     description:
@@ -33,6 +39,7 @@ export const SETTING_GROUPS = {
   contact: { label: 'Contact', description: 'Where enquiries and booking notifications go.' },
   booking: { label: 'Booking calls', description: 'When people can book a free call. All times are UK time.' },
   business: { label: 'Business details', description: 'Your name and address as they appear in contracts.' },
+  cv: { label: 'CV', description: 'Write or upload your CV in Markdown. It becomes a page at /cv and a downloadable PDF at /cv.pdf. Switch it on under Site sections.' },
   contract: { label: 'Contract template', description: 'Starting text for new contracts. Placeholders in {{double braces}} are filled in for each project.' },
 } as const;
 
@@ -60,21 +67,32 @@ export const SETTING_FIELDS = [
   { key: 'heroHeadline', label: 'Headline', type: 'text', group: 'homepage', maxLength: 120 },
   { key: 'heroSubheading', label: 'Subheading', type: 'textarea', group: 'homepage', maxLength: 300 },
 
-  { key: 'pricingFrom', label: 'Projects typically start from (£)', type: 'number', group: 'pricing', min: 0, max: 1_000_000 },
+  { key: 'pricingFrom', label: 'Projects typically start from (whole amount)', type: 'number', group: 'pricing', min: 0, max: 1_000_000 },
   { key: 'pricingNote', label: 'Pricing note', type: 'textarea', group: 'pricing', maxLength: 500 },
-  { key: 'dayRate', label: 'Day rate for changes and extra work (£)', type: 'number', group: 'pricing', min: 0, max: 10_000 },
-  { key: 'hostingPrice', label: 'Hosting and maintenance (from £ per month)', type: 'number', group: 'pricing', min: 0, max: 10_000, help: 'Shown in the pricing section. Set the actual fee on each job.' },
+  { key: 'dayRate', label: 'Day rate for changes and extra work (whole amount)', type: 'number', group: 'pricing', min: 0, max: 10_000 },
+  { key: 'hostingPrice', label: 'Hosting and maintenance (from, per month)', type: 'number', group: 'pricing', min: 0, max: 10_000, help: 'Shown in the pricing section. Set the actual fee on each job.' },
   { key: 'hostingMarkupPercent', label: 'Markup on hosting costs (%)', type: 'number', group: 'pricing', min: 0, max: 200, help: "A job's hosting fee is its server and running costs plus this percentage." },
   { key: 'depositPercent', label: 'Deposit before work starts (%)', type: 'number', group: 'pricing', min: 0, max: 100 },
   { key: 'supportMonths', label: 'Free support after launch (months)', type: 'number', group: 'pricing', min: 0, max: 36 },
-  { key: 'supportBasicPrice', label: 'Extended support: standard plan (£ per month)', type: 'number', group: 'pricing', min: 0, max: 10_000 },
+  { key: 'supportBasicPrice', label: 'Extended support: standard plan (per month)', type: 'number', group: 'pricing', min: 0, max: 10_000 },
   { key: 'supportBasicHours', label: 'Standard plan hours per month', type: 'number', group: 'pricing', min: 0, max: 200 },
-  { key: 'supportPriorityPrice', label: 'Extended support: priority plan (£ per month)', type: 'number', group: 'pricing', min: 0, max: 10_000 },
+  { key: 'supportPriorityPrice', label: 'Extended support: priority plan (per month)', type: 'number', group: 'pricing', min: 0, max: 10_000 },
   { key: 'supportPriorityHours', label: 'Priority plan hours per month', type: 'number', group: 'pricing', min: 0, max: 200 },
 
+  { key: 'taxCountry', label: 'Where you pay tax', type: 'select', group: 'tax', options: [['uk', 'UK (England, Wales or Northern Ireland)'], ['uk-scotland', 'UK, as a Scottish taxpayer'], ['ie', 'Ireland']] },
+  { key: 'otherIncome', label: 'Other income this tax year, e.g. a salary (whole amount)', type: 'number', group: 'tax', min: 0, max: 10_000_000, help: 'Pushes your business profit into the right tax bands. Tax on that income is assumed to be paid already.' },
+  { key: 'homeOfficeBand', label: 'Working from home (UK flat rate)', type: 'select', group: 'tax', options: [['none', 'Not claiming'], ['25', '25 to 50 hours a month (£10/month)'], ['51', '51 to 100 hours a month (£18/month)'], ['101', '101+ hours a month (£26/month)']] },
+  { key: 'mtdQuarters', label: 'Making Tax Digital quarters (UK)', type: 'select', group: 'tax', options: [['standard', 'Standard (6 April to 5 July, …)'], ['calendar', 'Calendar quarters (1 April to 30 June, …)']] },
+  { key: 'mileageRateIe', label: 'Mileage rate (Ireland, cents per km)', type: 'number', group: 'tax', min: 0, max: 200, help: 'UK mileage uses the HMRC rates automatically.' },
+  { key: 'vatRegistered', label: 'VAT registered', type: 'select', group: 'tax', options: [['no', 'No'], ['yes', 'Yes']] },
+  { key: 'vatNumber', label: 'VAT number', type: 'text', group: 'tax', maxLength: 20, placeholder: 'GB123456789 or IE1234567X' },
+  { key: 'vatRegisteredFrom', label: 'VAT registered from', type: 'date', group: 'tax' },
+  { key: 'vatScheme', label: 'VAT scheme', type: 'select', group: 'tax', options: [['invoice', 'Standard (on invoices issued)'], ['cash', 'Cash accounting (on money received)'], ['flat_rate', 'Flat Rate Scheme (UK)']] },
+  { key: 'vatFlatRatePercent', label: 'Flat rate percentage (UK)', type: 'text', group: 'tax', placeholder: '16.5', help: '16.5% if you are a limited cost trader (most freelance developers); 14.5% for IT consultancy otherwise. 1% off in your first year.', pattern: { regex: /^(\d{1,2}(\.\d{1,2})?)?$/, message: 'Enter a percentage like 16.5' } },
+  { key: 'vatQuarterEnds', label: 'VAT quarters end in (UK)', type: 'select', group: 'tax', options: [['mar', 'March, June, September, December'], ['apr', 'April, July, October, January'], ['may', 'May, August, November, February']], help: 'Ireland uses two-month periods (January–February, …) automatically.' },
   { key: 'cardFeePercent', label: 'Stripe fee: percentage', type: 'text', group: 'payments', placeholder: '1.5', help: 'Check your Stripe pricing page. 1.5% is the usual rate for UK cards.', pattern: { regex: /^\d{1,2}(\.\d{1,2})?$/, message: 'Enter a percentage like 1.5' } },
   { key: 'cardFeeFixedPence', label: 'Stripe fee: fixed part (pence)', type: 'number', group: 'payments', min: 0, max: 500 },
-  { key: 'cardFeeCap', label: 'Most card fee a client pays (£)', type: 'number', group: 'payments', min: 0, max: 1000, help: 'Above this you absorb the rest. 0 = you absorb all card fees.' },
+  { key: 'cardFeeCap', label: 'Most card fee a client pays (whole amount)', type: 'number', group: 'payments', min: 0, max: 1000, help: 'Above this you absorb the rest. 0 = you absorb all card fees.' },
   { key: 'contactEmail', label: 'Contact email', type: 'email', group: 'contact', help: 'Shown on the site and receives booking, payment and contract notifications.' },
   { key: 'contactPhone', label: 'Phone number (optional)', type: 'text', group: 'contact', maxLength: 30, placeholder: '07…' },
 
@@ -95,6 +113,7 @@ export const SETTING_FIELDS = [
   { key: 'businessName', label: 'Your name as a sole trader', type: 'text', group: 'business', maxLength: 120 },
   { key: 'businessAddress', label: 'Business address', type: 'textarea', group: 'business', maxLength: 300, help: 'Required in contracts.' },
 
+  { key: 'cvMarkdown', label: 'CV (Markdown)', type: 'textarea', group: 'cv', maxLength: 40_000, help: '# Your name, ## Section, ### Job title, - bullet points, **bold**, [link](https://…)' },
   { key: 'contractTemplate', label: 'Contract template', type: 'textarea', group: 'contract', maxLength: 40_000 },
 ] as const satisfies readonly SettingField[];
 
@@ -137,6 +156,18 @@ export const SETTING_DEFAULTS: SiteSettings = {
   supportPriorityPrice: '250',
   supportPriorityHours: '5',
 
+  taxCountry: 'uk',
+  otherIncome: '0',
+  homeOfficeBand: 'none',
+  mtdQuarters: 'standard',
+  mileageRateIe: '0',
+  vatRegistered: 'no',
+  vatNumber: '',
+  vatRegisteredFrom: '',
+  vatScheme: 'invoice',
+  vatFlatRatePercent: '16.5',
+  vatQuarterEnds: 'mar',
+
   cardFeePercent: '1.5',
   cardFeeFixedPence: '20',
   cardFeeCap: '25',
@@ -161,6 +192,29 @@ export const SETTING_DEFAULTS: SiteSettings = {
   businessName: 'Your Name',
   businessAddress: '',
 
+  cvMarkdown: `# Your Name
+
+Freelance software developer · Your Town · [hello@example.com](mailto:hello@example.com)
+
+## Summary
+
+A couple of sentences about what you do and who you do it for.
+
+## Experience
+
+### Freelance software developer · 2020 to present
+
+- What you built, for whom, and the result
+- Another project with a measurable outcome
+
+## Skills
+
+- **Languages:** TypeScript, Go, SQL
+- **Tools:** Next.js, Flutter, PostgreSQL, Docker
+
+## Education
+
+### BSc Computer Science · University, 2020`,
   contractTemplate: DEFAULT_CONTRACT_TEMPLATE,
 };
 

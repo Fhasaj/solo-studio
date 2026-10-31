@@ -29,6 +29,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     ...GetContent('industries').map((industry) => ({ url: absoluteUrl(`/industries/${industry.slug}`), changeFrequency: 'monthly' as const, priority: 0.7 })),
     { url: absoluteUrl('/book'), changeFrequency: 'monthly', priority: 0.6 },
     { url: absoluteUrl('/privacy'), changeFrequency: 'yearly', priority: 0.2 },
-    { url: absoluteUrl('/cv'), changeFrequency: 'yearly', priority: 0.2 },
+    ...(sections.cv ? [{ url: absoluteUrl('/cv'), changeFrequency: 'yearly' as const, priority: 0.3 }] : []),
   ];
 }

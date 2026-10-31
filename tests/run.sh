@@ -41,4 +41,5 @@ export BASE_URL=http://localhost:$PORT MAIL_FILE="$TMP/mail.jsonl" DB_DIR="$TMP/
 
 echo "== Smoke test (fresh install)"; start; node tests/smoke.mjs
 echo "== End-to-end flows"; start; node tests/e2e.mjs
+echo "== Money, CV and settings"; start; node tests/finance.mjs
 echo "== Access control"; start; node scripts/check-auth.mjs

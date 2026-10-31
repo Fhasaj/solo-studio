@@ -2,6 +2,7 @@ import { getDb } from '../dbConnect';
 import { runMigrations } from '../migrate';
 import { SECTION_DEFAULTS, type SectionKey, type SectionVisibility } from '../sections';
 import { SETTING_DEFAULTS, isSettingKey, type SettingKey, type SiteSettings } from '../siteSettings';
+import { configDefaults } from '../siteConfig';
 
 const db = getDb('settings');
 
@@ -56,8 +57,9 @@ export function SetSectionVisibility(key: SectionKey, isVisible: boolean) {
   return _setVisibility.run(isVisible ? 1 : 0, key).changes;
 }
 
+// Built-in defaults, then config/site.json, then whatever was saved in the admin
 export function GetSiteSettings(): SiteSettings {
-  const settings = { ...SETTING_DEFAULTS };
+  const settings = { ...SETTING_DEFAULTS, ...configDefaults() };
   for (const row of _getSettings.all() as Array<{ key: string; value: string }>) {
     if (isSettingKey(row.key)) settings[row.key] = row.value;
   }

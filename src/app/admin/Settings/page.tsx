@@ -31,6 +31,12 @@ export default function SettingsPage() {
   return (
     <>
       <PageHeader title="Settings" description="Text, prices and details used across the site, bookings, the client portal and contracts." />
+      <ImportExport
+        onImported={(data) => {
+          setSaved(data);
+          setValues(data);
+        }}
+      />
       <div className="flex flex-col gap-6">
         <SiteSections />
         {(Object.keys(SETTING_GROUPS) as SettingGroup[]).flatMap((group) => [
@@ -58,6 +64,7 @@ const SECTIONS: { key: SectionKey; label: string; note: string }[] = [
   { key: "testimonials", label: "Testimonials", note: "Client quotes on the home page" },
   { key: "pricing", label: "Pricing", note: "The pricing section on the home page" },
   { key: "faq", label: "FAQs", note: "Common questions on the home page" },
+  { key: "cv", label: "CV", note: "Your CV at /cv with a PDF download, linked from the footer" },
 ];
 
 // Each toggle saves straight away
@@ -78,6 +85,68 @@ function SiteSections() {
         ))}
       </ul>
     </section>
+  );
+}
+
+// The CV is Markdown: type it, or load a .md file into the box
+function CvField({ value, onChange, help, maxLength }: { value: string; onChange: (value: string) => void; help?: string; maxLength?: number }) {
+  const load = async (file: File) => {
+    if (file.size > 200_000) return showError(new Error("That file is too big for a CV"));
+    onChange(await file.text());
+    showSuccess(`Loaded ${file.name}. Save to publish it.`);
+  };
+  return (
+    <div className="flex flex-col gap-2">
+      <div className="flex flex-wrap gap-2">
+        <label className={`${smallButton} cursor-pointer`}>
+          Upload a .md file
+          <input type="file" accept=".md,.markdown,text/markdown,text/plain" className="hidden" onChange={(e) => e.target.files?.[0] && load(e.target.files[0])} />
+        </label>
+        <a href="/cv" target="_blank" rel="noreferrer" className={smallButton}>View /cv</a>
+        <a href="/cv.pdf" target="_blank" rel="noreferrer" className={smallButton}>View PDF</a>
+      </div>
+      <TextArea id="setting-cvMarkdown" label="CV (Markdown)" rows={26} maxLength={maxLength} value={value} onChange={onChange} help={`${help ?? ""} Save first, then view. Switch the CV on under Site sections.`} className="font-mono text-sm" />
+    </div>
+  );
+}
+
+// Settings as a JSON file: a backup, or a way to copy a site's setup (also usable as config/site.json)
+function ImportExport({ onImported }: { onImported: (data: SiteSettings) => void }) {
+  const exportSettings = async () => {
+    try {
+      const data = await api<SiteSettings>("/api/admin/settings");
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = `settings-${new Date().toISOString().slice(0, 10)}.json`;
+      link.click();
+      URL.revokeObjectURL(link.href);
+    } catch (error) {
+      showError(error);
+    }
+  };
+
+  const importSettings = async (file: File) => {
+    try {
+      const values = JSON.parse(await file.text());
+      if (!values || typeof values !== "object" || Array.isArray(values)) throw new Error("That file isn't a settings export");
+      if (!window.confirm(`Replace your settings with the ${Object.keys(values).length} values in ${file.name}? Bank details aren't affected.`)) return;
+      // The server checks every value, exactly as when saving a form
+      onImported(await api<SiteSettings>("/api/admin/settings", "PUT", { values }));
+      showSuccess("Settings imported");
+    } catch (error) {
+      showError(error);
+    }
+  };
+
+  return (
+    <div className="mb-6 flex flex-wrap gap-2">
+      <button type="button" className={smallButton} onClick={exportSettings}>Export settings</button>
+      <label className={`${smallButton} cursor-pointer`}>
+        Import settings
+        <input type="file" accept="application/json,.json" className="hidden" onChange={(e) => e.target.files?.[0] && importSettings(e.target.files[0])} />
+      </label>
+    </div>
   );
 }
 
@@ -135,7 +204,7 @@ function SettingsGroup({ group, values, saved, onChange, onSaved }: GroupProps) 
         </details>
       )}
 
-      <div className={`mt-5 grid gap-4 ${group === "booking" || group === "pricing" ? "grid-cols-1 md:grid-cols-2" : "grid-cols-1"}`}>
+      <div className={`mt-5 grid gap-4 ${group === "booking" || group === "pricing" || group === "tax" ? "grid-cols-1 md:grid-cols-2" : "grid-cols-1"}`}>
         {groupFields.map((field) => {
           const common = {
             id: `setting-${field.key}`,
@@ -150,12 +219,22 @@ function SettingsGroup({ group, values, saved, onChange, onSaved }: GroupProps) 
           const multiline = field.type === "textarea" || field.type === "dates";
           return (
             <div key={field.key} className={multiline && group !== "pricing" ? "md:col-span-2" : ""}>
-              {field.key === "businessAddress" ? (
+              {field.type === "select" ? (
+                <div>
+                  <label htmlFor={common.id} className="block mb-1 text-sm font-FiraSans-SemiBold text-textColour">{field.label}</label>
+                  <select id={common.id} value={common.value} onChange={(e) => common.onChange(e.target.value)} className="admin-input">
+                    {(field.options ?? []).map(([option, label]) => <option key={option} value={option}>{label}</option>)}
+                  </select>
+                  {field.help && <p className="mt-1 text-xs text-mutedColour">{field.help}</p>}
+                </div>
+              ) : field.key === "cvMarkdown" ? (
+                <CvField value={common.value} onChange={common.onChange} help={field.help} maxLength={field.maxLength} />
+              ) : field.key === "businessAddress" ? (
                 <AddressField id={common.id} label={common.label} value={common.value} onChange={common.onChange} help={field.help} maxLength={field.maxLength} />
               ) : multiline ? (
                 <TextArea {...common} rows={field.key === "contractTemplate" ? 30 : field.type === "dates" ? 4 : 3} className={field.key === "contractTemplate" ? "font-mono text-sm" : ""} />
               ) : (
-                <TextField {...common} type={field.type === "number" ? "number" : field.type === "email" ? "email" : field.type === "url" ? "url" : "text"} />
+                <TextField {...common} type={field.type === "number" ? "number" : field.type === "email" ? "email" : field.type === "url" ? "url" : field.type === "date" ? "date" : "text"} />
               )}
               {fieldError}
             </div>

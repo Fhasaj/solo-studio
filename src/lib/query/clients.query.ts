@@ -181,6 +181,16 @@ runMigrations(db, [
       `);
     },
   },
+  {
+    // Where the client is and their VAT number decide whether VAT goes on their invoices
+    id: '2026-11-01-client-vat',
+    up: (db) => {
+      db.exec(`
+        ALTER TABLE clients ADD COLUMN country TEXT NOT NULL DEFAULT '';
+        ALTER TABLE clients ADD COLUMN vatNumber TEXT NOT NULL DEFAULT '';
+      `);
+    },
+  },
 ]);
 
 // ---- Types ----
@@ -200,6 +210,8 @@ export interface Client {
   company: string;
   phone: string;
   address: string;
+  country: string; // GB, IE, EU or OTHER; empty = same country as you
+  vatNumber: string;
   notes: string;
   isActive: boolean;
   createdAt: string | null;
@@ -333,19 +345,23 @@ export function GetClientByEmail(email: string) {
   return row ? toClient(row) : null;
 }
 
-export type ClientInput = Pick<Client, 'name' | 'email' | 'company' | 'phone' | 'address' | 'notes' | 'isActive'>;
+export type ClientInput = Pick<Client, 'name' | 'email' | 'company' | 'phone' | 'address' | 'country' | 'vatNumber' | 'notes' | 'isActive'>;
 
 export function InsertClient(input: ClientInput) {
   const info = db
-    .prepare('INSERT INTO clients (name, email, company, phone, address, notes, isActive) VALUES (?, ?, ?, ?, ?, ?, ?)')
-    .run(input.name, input.email, input.company, input.phone, input.address, input.notes, input.isActive ? 1 : 0);
+    .prepare(
+      'INSERT INTO clients (name, email, company, phone, address, country, vatNumber, notes, isActive) VALUES (@name, @email, @company, @phone, @address, @country, @vatNumber, @notes, @isActive)'
+    )
+    .run({ ...input, isActive: input.isActive ? 1 : 0 });
   return Number(info.lastInsertRowid);
 }
 
 export function UpdateClient(id: number, input: ClientInput) {
   return db
-    .prepare('UPDATE clients SET name = ?, email = ?, company = ?, phone = ?, address = ?, notes = ?, isActive = ? WHERE id = ?')
-    .run(input.name, input.email, input.company, input.phone, input.address, input.notes, input.isActive ? 1 : 0, id).changes;
+    .prepare(
+      'UPDATE clients SET name = @name, email = @email, company = @company, phone = @phone, address = @address, country = @country, vatNumber = @vatNumber, notes = @notes, isActive = @isActive WHERE id = @id'
+    )
+    .run({ ...input, isActive: input.isActive ? 1 : 0, id }).changes;
 }
 
 export function DeleteClient(id: number) {
@@ -687,11 +703,12 @@ export type InvoiceStatus = 'unpaid' | 'paid' | 'void';
 
 export interface InvoiceLine {
   description: string;
-  amount: number; // pence
+  amount: number; // pence, excluding VAT
+  fee?: boolean; // the business card fee: passed through, not business income
 }
 
 export interface InvoiceData {
-  seller: { name: string; address: string; email: string };
+  seller: { name: string; address: string; email: string; vatNumber?: string };
   buyer: { name: string; company: string; address: string; email: string };
   projectTitle: string;
   projectReference: string;
@@ -700,6 +717,7 @@ export interface InvoiceData {
   supplyDate: string;
   notes: string;
   paidBy?: 'bank' | 'card';
+  vat?: { rate: number; amount: number; code: string; note: string };
 }
 
 export interface Invoice {

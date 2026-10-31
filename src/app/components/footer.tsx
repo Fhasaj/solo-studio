@@ -2,6 +2,7 @@ import Link from "next/link";
 import { FaGithub, FaLinkedin } from "react-icons/fa6";
 import { MdOutlineEmail } from "react-icons/md";
 import type { SiteSettings } from "@/lib/siteSettings";
+import { GetSectionVisibility } from "@/lib/query/settings.query";
 
 const links = [
   { href: "/work", label: "Case studies" },
@@ -17,6 +18,7 @@ export default function Footer({ settings }: { settings: SiteSettings }) {
     settings.linkedinUrl && { href: settings.linkedinUrl, label: "LinkedIn", icon: <FaLinkedin /> },
     settings.contactEmail && { href: `mailto:${settings.contactEmail}`, label: "Email", icon: <MdOutlineEmail /> },
   ].filter(Boolean) as { href: string; label: string; icon: React.ReactNode }[];
+  const footerLinks = GetSectionVisibility().cv && settings.cvMarkdown.trim() ? [...links, { href: "/cv", label: "CV" }] : links;
 
   return (
     <footer className="w-full border-t border-borderColour bg-backgroundColour">
@@ -27,7 +29,7 @@ export default function Footer({ settings }: { settings: SiteSettings }) {
           </p>
           <nav aria-label="Footer" className="mt-3">
             <ul className="flex flex-wrap justify-center md:justify-start gap-x-5 gap-y-2 text-sm">
-              {links.map((link) => (
+              {footerLinks.map((link) => (
                 <li key={link.href}>
                   <Link href={link.href} className="text-mutedColour hover:text-accentColour hover:cursor-finger">
                     {link.label}

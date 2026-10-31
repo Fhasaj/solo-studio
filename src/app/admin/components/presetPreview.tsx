@@ -7,7 +7,7 @@ import { formatPence } from "@/lib/format";
 export default function PresetPreview({ presetId, totalPrice, depositPercent }: { presetId: string; totalPrice: string | number; depositPercent: number }) {
   const preset = getPreset(presetId);
   if (!preset) return null;
-  const pence = typeof totalPrice === "number" ? totalPrice : Math.round(Number(totalPrice.replace(/[£,\s]/g, "")) * 100) || 0;
+  const pence = typeof totalPrice === "number" ? totalPrice : Math.round(Number(totalPrice.replace(/[£€,\s]/g, "")) * 100) || 0;
   const stages = presetMilestones(preset, pence, depositPercent);
 
   return (

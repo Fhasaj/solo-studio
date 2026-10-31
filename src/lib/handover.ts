@@ -16,15 +16,17 @@ import { getKey } from './secureStore';
 export const HANDOVER_DIR = process.env.HANDOVER_DIR || path.join(/*turbopackIgnore: true*/ DB_DIR, 'handover');
 // Cloudflare refuses uploads over 100 MB; bigger projects should be handed over as a repository
 export const MAX_HANDOVER_BYTES = 100 * 1024 * 1024;
+// Expense receipts use the same encrypted storage, in their own folder
+export const RECEIPTS_DIR = process.env.RECEIPTS_DIR || path.join(/*turbopackIgnore: true*/ DB_DIR, 'receipts');
 
 const MAGIC = Buffer.from('FHH1');
 const IV_LENGTH = 12;
 const TAG_LENGTH = 16;
 const HEADER = MAGIC.length + IV_LENGTH;
 
-function filePath(storedName: string) {
+function filePath(storedName: string, dir: string) {
   if (!/^[0-9a-f-]{36}\.bin$/.test(storedName)) throw new Error('Bad handover file name');
-  return path.join(/*turbopackIgnore: true*/ HANDOVER_DIR, storedName);
+  return path.join(/*turbopackIgnore: true*/ dir, storedName);
 }
 
 // Keeps only safe characters from an uploaded file name, for the download name
@@ -34,13 +36,13 @@ export function safeFileName(name: string) {
 }
 
 // Encrypts a file into the handover folder. Returns the stored name and the SHA-256 of the original.
-export async function storeHandoverFile(sourcePath: string) {
-  fs.mkdirSync(/*turbopackIgnore: true*/ HANDOVER_DIR, { recursive: true, mode: 0o700 });
+export async function storeHandoverFile(sourcePath: string, dir = HANDOVER_DIR) {
+  fs.mkdirSync(/*turbopackIgnore: true*/ dir, { recursive: true, mode: 0o700 });
   const storedName = `${randomUUID()}.bin`;
   const iv = randomBytes(IV_LENGTH);
   const cipher = createCipheriv('aes-256-gcm', getKey(), iv);
   const hash = createHash('sha256');
-  const target = filePath(storedName);
+  const target = filePath(storedName, dir);
   const out = fs.createWriteStream(target, { mode: 0o600 });
   out.write(Buffer.concat([MAGIC, iv]));
 
@@ -65,8 +67,8 @@ export async function storeHandoverFile(sourcePath: string) {
 }
 
 // A stream of the decrypted file. If the stored file was altered, decryption fails and the download aborts.
-export function readHandoverFile(storedName: string) {
-  const target = filePath(storedName);
+export function readHandoverFile(storedName: string, dir = HANDOVER_DIR) {
+  const target = filePath(storedName, dir);
   const { size } = fs.statSync(target);
   const fd = fs.openSync(target, 'r');
   const header = Buffer.alloc(HEADER);
@@ -83,6 +85,6 @@ export function readHandoverFile(storedName: string) {
   return { source, decipher };
 }
 
-export function deleteHandoverFile(storedName: string) {
-  fs.rmSync(filePath(storedName), { force: true });
+export function deleteHandoverFile(storedName: string, dir = HANDOVER_DIR) {
+  fs.rmSync(filePath(storedName, dir), { force: true });
 }

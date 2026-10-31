@@ -13,7 +13,8 @@ import {
 } from '@/lib/query/clients.query';
 import { GetBooking, LinkBookingToClient } from '@/lib/query/bookings.query';
 import { sendLoginLink } from '@/lib/portal';
-import { readBool, readEmail, readId, readOptionalId, readText, sendApiError, ValidationError } from '@/lib/validate';
+import { readBool, readEmail, readEnum, readId, readOptionalId, readText, sendApiError, ValidationError } from '@/lib/validate';
+import { CLIENT_COUNTRIES } from '@/lib/vat';
 
 function readInput(body: Record<string, unknown>, id: number | null): ClientInput {
   const email = readEmail(body.email, 'email');
@@ -25,6 +26,8 @@ function readInput(body: Record<string, unknown>, id: number | null): ClientInpu
     company: readText(body.company, 'company', { label: 'Company', max: 150 }),
     phone: readText(body.phone, 'phone', { label: 'Phone', max: 30 }),
     address: readText(body.address, 'address', { label: 'Billing address', max: 300, multiline: true }),
+    country: body.country ? readEnum(body.country, 'country', CLIENT_COUNTRIES.map(([code]) => code), 'Country') : '',
+    vatNumber: readText(body.vatNumber, 'vatNumber', { label: 'VAT number', max: 20 }).toUpperCase().replace(/\s/g, ''),
     notes: readText(body.notes, 'notes', { label: 'Notes', max: 5000, multiline: true }),
     isActive: readBool(body.isActive ?? true, 'isActive'),
   };

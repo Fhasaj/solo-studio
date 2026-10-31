@@ -4,7 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { MdOutlineDashboard, MdOutlineRateReview, MdOutlineDesignServices, MdOutlineFolder, MdOutlineWork, MdOutlineHome, MdOutlineLogout, MdOutlineCalendarMonth, MdOutlinePeople, MdOutlineSettings, MdOutlineFactory, MdOutlineQuiz } from "react-icons/md";
+import { MdOutlineDashboard, MdOutlineRateReview, MdOutlineDesignServices, MdOutlineFolder, MdOutlineWork, MdOutlineHome, MdOutlineLogout, MdOutlineCalendarMonth, MdOutlinePeople, MdOutlineSettings, MdOutlineFactory, MdOutlineQuiz, MdOutlineAccountBalance } from "react-icons/md";
 import { RxHamburgerMenu } from "react-icons/rx";
 import { IoClose } from "react-icons/io5";
 
@@ -13,6 +13,7 @@ const links = [
   { href: "/admin/Bookings", label: "Bookings", icon: MdOutlineCalendarMonth },
   { href: "/admin/Clients", label: "Clients", icon: MdOutlinePeople },
   { href: "/admin/Jobs", label: "Jobs", icon: MdOutlineWork },
+  { href: "/admin/Money", label: "Money", icon: MdOutlineAccountBalance },
   { href: "/admin/CaseStudies", label: "Case studies", icon: MdOutlineFolder },
   { href: "/admin/Services", label: "Services", icon: MdOutlineDesignServices },
   { href: "/admin/Industries", label: "Industries", icon: MdOutlineFactory },

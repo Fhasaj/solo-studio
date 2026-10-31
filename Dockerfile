@@ -31,6 +31,8 @@ RUN groupadd --system --gid 1001 nodejs \
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
+# Optional config/site.json with this site's starting settings
+COPY --from=builder /app/config ./config
 # Starting databases, copied into the volume on first start only
 COPY --from=builder /app/db ./db-seed
 COPY docker-entrypoint.sh ./docker-entrypoint.sh

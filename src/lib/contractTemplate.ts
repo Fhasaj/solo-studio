@@ -25,6 +25,7 @@ export const CONTRACT_PLACEHOLDERS = [
   ['hosting', 'Hosting paragraph: your monthly fee if you host it, otherwise that the client hosts it'],
   ['paymentRule', 'When each stage is paid: before it starts, or when it is finished'],
   ['paymentMethods', 'How the client can pay: bank transfer, and card if switched on for the job'],
+  ['vatNote', 'Whether VAT is added, from Settings → Tax and VAT'],
   ['date', "Today's date"],
 ] as const;
 
@@ -57,7 +58,7 @@ The total price is {{totalPrice}}. The work is delivered and paid for in the fol
 
 {{milestones}}
 
-The Developer is not registered for VAT unless stated otherwise in writing, so no VAT is added to these amounts.
+{{vatNote}}
 
 ## 3. Payment
 
@@ -74,7 +75,7 @@ The Developer is not registered for VAT unless stated otherwise in writing, so n
 
 ## 5. Changes to the work
 
-The Client may ask for changes at any time. The Developer will confirm in writing whether the change affects the price or the timeline before doing the work. Changes outside the agreed scope are charged at £{{dayRate}} per day (or part day, pro rata) unless a fixed price is agreed in writing.
+The Client may ask for changes at any time. The Developer will confirm in writing whether the change affects the price or the timeline before doing the work. Changes outside the agreed scope are charged at {{dayRate}} per day (or part day, pro rata) unless a fixed price is agreed in writing.
 
 ## 6. Ownership of the work
 
@@ -92,7 +93,7 @@ The Client will provide the information, content, access and feedback the Develo
 
 - The Developer will fix defects in the delivered work, free of charge, for {{supportMonths}} months after the project is marked complete. A defect is where the software does not work as agreed in this document.
 - Free support does not cover new features, changes to the agreed scope, problems caused by changes made by anyone else, third-party services, or hosting costs.
-- After the free period the Client may buy extended support: a standard plan at £{{supportBasicPrice}} per month or a priority plan at £{{supportPriorityPrice}} per month, paid in advance.
+- After the free period the Client may buy extended support: a standard plan at {{supportBasicPrice}} per month or a priority plan at {{supportPriorityPrice}} per month, paid in advance.
 
 ## 9. Hosting
 
@@ -121,3 +122,12 @@ Both parties will keep the other's confidential information private and use it o
 - If any part of this agreement is found to be unenforceable, the rest still applies.
 - Signing electronically has the same effect as signing on paper.
 - This agreement is governed by the law of England and Wales, and the courts of England and Wales have exclusive jurisdiction.`;
+
+// The Irish version: Irish late payment rules, Irish data protection law and Irish courts. Built from the UK text so the
+// two stay in step; used automatically when the tax country is Ireland and the template hasn't been edited.
+export const IRISH_CONTRACT_TEMPLATE = DEFAULT_CONTRACT_TEMPLATE.replace(
+  /- Late payments carry statutory interest[^\n]*/,
+  '- Late payments carry interest and compensation under the European Communities (Late Payment in Commercial Transactions) Regulations 2012. Interest is charged at 8% a year above the European Central Bank reference rate, and fixed compensation is €40 for debts under €1,000, €70 for debts of €1,000 to €9,999.99, and €100 for debts of €10,000 or more. The Developer may also recover reasonable costs of collecting the debt.'
+)
+  .replace('in line with UK GDPR and the Data Protection Act 2018', 'in line with the GDPR and the Data Protection Act 2018 (Ireland)')
+  .replace('This agreement is governed by the law of England and Wales, and the courts of England and Wales have exclusive jurisdiction.', 'This agreement is governed by the law of Ireland, and the Irish courts have exclusive jurisdiction.');

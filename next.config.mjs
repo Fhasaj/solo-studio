@@ -2,6 +2,8 @@
 const nextConfig = {
   // Produces a self-contained server in .next/standalone for the Docker image
   output: "standalone",
+  // Loaded from node_modules at runtime so pdfkit can find its own data files
+  serverExternalPackages: ["pdfkit"],
   images: {
     // AVIF first, falling back to WebP, for browsers that support them
     formats: ["image/avif", "image/webp"],

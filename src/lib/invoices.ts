@@ -18,22 +18,35 @@ import {
   type Project,
 } from './query/clients.query';
 import { addDays, addMonths, formatDate, londonDay } from './format';
+import { vatProfile } from './finance';
+import { vatTreatment } from './vat';
 
 const PAYMENT_TERMS_DAYS = 14;
 
 function baseData(project: Project, paymentReference: string, lines: InvoiceData['lines']): InvoiceData {
   const settings = GetSiteSettings();
   const client = GetClient(project.clientId);
+  const today = londonDay(new Date());
+  const profile = vatProfile(settings, today);
+  // Whether VAT applies, and at what rate, depends on where the client is
+  const treatment = vatTreatment(profile, today, { country: client?.country ?? '', vatNumber: client?.vatNumber ?? '' });
+  const net = lines.reduce((sum, line) => sum + line.amount, 0);
+  const registered = treatment.code !== 'not_registered';
   return {
-    seller: { name: settings.businessName, address: settings.businessAddress, email: settings.contactEmail },
+    seller: { name: settings.businessName, address: settings.businessAddress, email: settings.contactEmail, vatNumber: registered ? settings.vatNumber : undefined },
     buyer: { name: client?.name ?? '', company: client?.company ?? '', address: client?.address ?? '', email: client?.email ?? '' },
     projectTitle: project.title,
     projectReference: project.reference,
     paymentReference,
     lines,
-    supplyDate: londonDay(new Date()),
-    notes: 'Not registered for VAT, so no VAT is charged.',
+    supplyDate: today,
+    notes: treatment.note,
+    vat: registered ? { rate: treatment.rate, amount: Math.round((net * treatment.rate) / 100), code: treatment.code, note: treatment.note } : undefined,
   };
+}
+
+function totalOf(data: InvoiceData) {
+  return data.lines.reduce((sum, line) => sum + line.amount, 0) + (data.vat?.amount ?? 0);
 }
 
 function issue(project: Project, kind: Invoice['kind'], milestoneId: number | null, months: number | null, data: InvoiceData) {
@@ -43,7 +56,7 @@ function issue(project: Project, kind: Invoice['kind'], milestoneId: number | nu
     milestoneId,
     kind,
     months,
-    total: data.lines.reduce((sum, line) => sum + line.amount, 0),
+    total: totalOf(data),
     data,
     issuedAt: today,
     dueAt: addDays(today, PAYMENT_TERMS_DAYS),
@@ -71,8 +84,9 @@ export function payMilestoneInvoice(project: Project, milestone: Milestone, paym
     issueMilestoneInvoice(project, milestone, paymentReference);
     invoice = GetOpenMilestoneInvoice(milestone.id)!;
   }
-  const lines = fee ? [...invoice.data.lines, { description: 'Card processing fee (business card)', amount: fee }] : invoice.data.lines;
-  MarkInvoicePaid(invoice.id, { ...invoice.data, lines, paidBy }, lines.reduce((sum, line) => sum + line.amount, 0));
+  const lines = fee ? [...invoice.data.lines, { description: 'Card processing fee (business card)', amount: fee, fee: true }] : invoice.data.lines;
+  const data = { ...invoice.data, lines, paidBy };
+  MarkInvoicePaid(invoice.id, data, totalOf(data));
   return invoice.id;
 }
 
@@ -103,4 +117,10 @@ export function payHostingInvoice(project: Project, invoice: Invoice) {
   MarkInvoicePaid(invoice.id, { ...invoice.data, paidBy: 'bank' }, invoice.total);
   SetHostingPaidUntil(project.id, hostingPeriod(project, invoice.months).end);
   return true;
+}
+
+// What the client has to pay for a milestone: its invoice total (which includes any VAT), or the price if not invoiced yet
+export function amountDue(milestone: Milestone) {
+  const invoice = GetOpenMilestoneInvoice(milestone.id);
+  return invoice && invoice.status === 'unpaid' ? invoice.total : milestone.amount;
 }

@@ -1,5 +1,7 @@
 "use client";
 
+import { CURRENCY_SYMBOL } from "@/lib/currency";
+
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -101,7 +103,7 @@ function NewJob() {
             </select>
           </div>
           <TextField id="job-title" label="Title" required maxLength={150} value={values.title} onChange={(v) => set("title", v)} placeholder="e.g. Job management system" />
-          <TextField id="job-price" label="Total price (£)" required={Boolean(values.presetId)} value={values.totalPrice} onChange={(v) => set("totalPrice", v)} placeholder="6000" />
+          <TextField id="job-price" label={`Total price (${CURRENCY_SYMBOL})`} required={Boolean(values.presetId)} value={values.totalPrice} onChange={(v) => set("totalPrice", v)} placeholder="6000" />
           <div>
             <label htmlFor="job-preset" className="block mb-1 text-sm font-FiraSans-SemiBold">Milestone template</label>
             <select id="job-preset" value={values.presetId} onChange={(e) => set("presetId", e.target.value)} className="admin-input">

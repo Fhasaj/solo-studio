@@ -91,9 +91,9 @@ export function readDate(value: unknown, field: string, { label, required = fals
   return text;
 }
 
-// "1,250.50" or "£1250" → pence
+// "1,250.50", "£1250" or "€1250" → pence (cents)
 export function readMoney(value: unknown, field: string, { label }: { label: string }) {
-  const text = readText(String(value ?? ''), field, { label, max: 20 }).replace(/[£,\s]/g, '');
+  const text = readText(String(value ?? ''), field, { label, max: 20 }).replace(/[£€,\s]/g, '');
   if (!/^\d+(\.\d{1,2})?$/.test(text)) throw new ValidationError(field, `${label} must be an amount in pounds, e.g. 1250 or 1250.50`);
   const pence = Math.round(Number(text) * 100);
   if (pence > 100_000_000) throw new ValidationError(field, `${label} is too large`);

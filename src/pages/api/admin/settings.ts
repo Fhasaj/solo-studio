@@ -2,7 +2,7 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import { requireAdmin } from '@/lib/requireAdmin';
 import { GetSiteSettings, SaveSiteSettings } from '@/lib/query/settings.query';
 import { SETTING_FIELDS, parseHours, type SettingField, type SettingKey } from '@/lib/siteSettings';
-import { readDate, readEmail, readInt, readText, readUrl, sendApiError, ValidationError } from '@/lib/validate';
+import { readDate, readEmail, readEnum, readInt, readText, readUrl, sendApiError, ValidationError } from '@/lib/validate';
 
 function readSetting(field: SettingField, value: unknown) {
   const { key, label } = field;
@@ -13,6 +13,10 @@ function readSetting(field: SettingField, value: unknown) {
       return readEmail(value, key, { label, required: false });
     case 'url':
       return readUrl(value, key, { label });
+    case 'select':
+      return readEnum(value, key, (field.options ?? []).map(([option]) => option), label);
+    case 'date':
+      return readDate(value, key, { label });
     case 'hours': {
       const text = readText(value, key, { label, max: 200 });
       try {

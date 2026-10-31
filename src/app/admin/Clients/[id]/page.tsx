@@ -1,5 +1,7 @@
 "use client";
 
+import { CURRENCY_SYMBOL } from "@/lib/currency";
+
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
@@ -121,7 +123,7 @@ export default function ClientPage() {
               </select>
               <p className="mt-1 text-xs text-mutedColour">Adds the milestones, splits the price between them and fills in a scope outline. Everything can be edited afterwards.</p>
             </div>
-            <TextField id="project-price" label="Total price (£)" required={Boolean(project.presetId)} value={project.totalPrice} onChange={(totalPrice) => setProject((p) => ({ ...p, totalPrice }))} placeholder="6000" />
+            <TextField id="project-price" label={`Total price (${CURRENCY_SYMBOL})`} required={Boolean(project.presetId)} value={project.totalPrice} onChange={(totalPrice) => setProject((p) => ({ ...p, totalPrice }))} placeholder="6000" />
             <TextArea id="project-summary" label="Scope (optional)" rows={4} value={project.summary} onChange={(summary) => setProject((p) => ({ ...p, summary }))} help="What's included; it goes into the contract. Leave empty to start from the preset's outline." />
             <div>
               <button type="submit" disabled={creating} className="btn-primary disabled:opacity-50">{creating ? "Creating…" : "Create project"}</button>

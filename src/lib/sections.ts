@@ -9,6 +9,7 @@ export const SECTION_DEFAULTS = {
   testimonials: true,
   pricing: true,
   faq: true,
+  cv: false,
 } as const;
 
 export type SectionKey = keyof typeof SECTION_DEFAULTS;

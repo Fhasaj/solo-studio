@@ -2,7 +2,9 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import { requireClient } from '@/lib/requireClient';
 import { GetClientProject, GetMilestone, ListMilestones } from '@/lib/query/clients.query';
 import { cardFee, describeMilestones } from '@/lib/portal';
+import { amountDue } from '@/lib/invoices';
 import { getStripe, stripeReady } from '@/lib/stripe';
+import { STRIPE_CURRENCY } from '@/lib/currency';
 import { absoluteUrl } from '@/lib/site';
 import { readEnum, readId, sendApiError } from '@/lib/validate';
 
@@ -21,7 +23,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     // UK law: a fee can only be added for business (commercial) cards, never personal ones
     const cardType = readEnum(req.body?.cardType, 'cardType', ['business', 'personal'] as const, 'Card type');
-    const fee = cardType === 'business' ? cardFee(milestone.amount) : 0;
+    const due = amountDue(milestone);
+    const fee = cardType === 'business' ? cardFee(due) : 0;
     const view = describeMilestones(project, ListMilestones(project.id)).find((m) => m.id === milestone.id)!;
     const back = absoluteUrl(`/portal/projects/${project.id}`);
 
@@ -39,10 +42,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       line_items: [
         {
           quantity: 1,
-          price_data: { currency: 'gbp', unit_amount: milestone.amount, product_data: { name: `${milestone.title} (${project.title})`, description: `Reference ${view.paymentReference}` } },
+          price_data: { currency: STRIPE_CURRENCY, unit_amount: due, product_data: { name: `${milestone.title} (${project.title})`, description: `Reference ${view.paymentReference}${due !== milestone.amount ? ', including VAT' : ''}` } },
         },
         ...(fee
-          ? [{ quantity: 1, price_data: { currency: 'gbp', unit_amount: fee, product_data: { name: 'Business card processing fee' } } }]
+          ? [{ quantity: 1, price_data: { currency: STRIPE_CURRENCY, unit_amount: fee, product_data: { name: 'Business card processing fee' } } }]
           : []),
       ],
       success_url: `${back}?paid=1`,

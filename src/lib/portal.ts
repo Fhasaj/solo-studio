@@ -22,11 +22,12 @@ import {
   type Milestone,
   type Project,
 } from './query/clients.query';
-import { fillTemplate } from './contractTemplate';
-import { addDays, addMonths, formatDate, formatPence, londonDay } from './format';
+import { DEFAULT_CONTRACT_TEMPLATE, fillTemplate, IRISH_CONTRACT_TEMPLATE } from './contractTemplate';
+import { taxCountry, vatProfile } from './finance';
+import { addDays, addMonths, formatDate, formatPence, formatPounds, londonDay } from './format';
 import { hashToken, newToken } from './booking';
 import { sendMail } from './mailer';
-import { payMilestoneInvoice } from './invoices';
+import { amountDue, payMilestoneInvoice } from './invoices';
 import { absoluteUrl } from './site';
 
 export type MilestoneDisplay = 'complete' | 'in_progress' | 'payment_due' | 'payment_reported' | 'paid_ready' | 'on_hold' | 'upcoming';
@@ -121,7 +122,7 @@ export async function recordPayment(project: Project, milestone: Milestone, paym
   // Paid-after stages are finished; paid-before stages are now ready to start
   const nextStatus = project.paymentTiming === 'after' || isDeposit(milestones, milestone) ? 'complete' : milestone.status === 'in_progress' ? 'in_progress' : 'upcoming';
   const recorded = InsertPayment(
-    { milestoneId: milestone.id, method: payment.method, amount: milestone.amount, fee: payment.fee ?? 0, reference: payment.reference ?? null },
+    { milestoneId: milestone.id, method: payment.method, amount: amountDue(milestone), fee: payment.fee ?? 0, reference: payment.reference ?? null },
     nextStatus
   );
   if (!recorded) return false;
@@ -171,7 +172,10 @@ export function buildContractBody(project: Project, client: Client) {
         .join('\n')
     : '- [Add milestones to the project before generating the contract]';
 
-  return fillTemplate(settings.contractTemplate, {
+  const vat = vatProfile(settings);
+  // An unedited UK template is swapped for the Irish one when you pay tax in Ireland
+  const template = taxCountry(settings) === 'ie' && settings.contractTemplate === DEFAULT_CONTRACT_TEMPLATE ? IRISH_CONTRACT_TEMPLATE : settings.contractTemplate;
+  return fillTemplate(template, {
     businessName: settings.businessName,
     businessAddress: settings.businessAddress.replace(/\n+/g, ', ') || '[Add your business address in Settings]',
     clientName: client.name,
@@ -185,9 +189,9 @@ export function buildContractBody(project: Project, client: Client) {
     depositAmount: formatPence(deposit),
     milestones: milestoneLines,
     supportMonths: String(project.supportMonths),
-    supportBasicPrice: settings.supportBasicPrice,
-    supportPriorityPrice: settings.supportPriorityPrice,
-    dayRate: settings.dayRate,
+    supportBasicPrice: formatPounds(settings.supportBasicPrice),
+    supportPriorityPrice: formatPounds(settings.supportPriorityPrice),
+    dayRate: formatPounds(settings.dayRate),
     paymentRule:
       project.paymentTiming === 'before'
         ? 'Each milestone marked as requiring payment must be paid before work on that milestone begins.'
@@ -195,6 +199,9 @@ export function buildContractBody(project: Project, client: Client) {
     paymentMethods: project.allowCard
       ? 'Payments are made by bank transfer using the reference shown in the client portal, or by card through the client portal. Card payments made with a business card may include a fee covering the card processing cost; no fee is added for bank transfers or personal cards.'
       : 'Payments are made by bank transfer using the reference shown in the client portal.',
+    vatNote: vat.registered
+      ? `All prices exclude VAT. VAT is added at the applicable rate (currently ${vat.standardRate}%) where it applies, and shown on each invoice.`
+      : 'The Developer is not registered for VAT, so no VAT is added to these amounts. If the Developer registers for VAT during the project, VAT will be added to invoices issued after registration at the applicable rate.',
     hosting: project.hostingMonthly
       ? `The Developer will host and maintain the software for ${formatPence(project.hostingMonthly)} per month, paid monthly in advance from launch. This covers the server, backups, security updates and monitoring. Either party may end hosting with 30 days' written notice, and the Developer will then hand over the software and data once all amounts due have been paid. If hosting fees are unpaid, section 4 applies and the service may be suspended until they are paid.`
       : 'The Client will host the software on their own infrastructure, at their own cost. The Developer will help with the first deployment as part of the project.',
@@ -340,7 +347,7 @@ export async function notifyPaymentRequested(project: Project, milestone: Milest
     text: [
       `Hi ${client.name},`,
       '',
-      `"${milestone.title}" for ${project.title} is ready for payment: ${formatPence(milestone.amount)}.`,
+      `"${milestone.title}" for ${project.title} is ready for payment: ${formatPence(invoice?.total ?? milestone.amount)}${invoice?.data.vat?.amount ? ' including VAT' : ''}.`,
       ...(invoice ? ['', `Invoice ${invoice.number}: ${absoluteUrl(`/portal/invoices/${invoice.id}`)}`] : []),
       '',
       `Please pay by bank transfer within 14 days using the reference ${milestone.paymentReference}. The bank details are in your client portal:`,

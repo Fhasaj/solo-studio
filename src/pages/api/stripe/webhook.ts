@@ -3,6 +3,8 @@ import type Stripe from 'stripe';
 import { getStripe } from '@/lib/stripe';
 import { GetMilestone, GetProject } from '@/lib/query/clients.query';
 import { recordPayment } from '@/lib/portal';
+import { amountDue } from '@/lib/invoices';
+import { STRIPE_CURRENCY } from '@/lib/currency';
 
 // Stripe signs each event; the signature is checked against the raw body, so Next mustn't parse it
 export const config = { api: { bodyParser: false } };
@@ -34,7 +36,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         const project = milestone && GetProject(milestone.projectId);
         // Only mark it paid if the full milestone amount was actually collected
         const fee = Number(session.metadata?.fee ?? 0);
-        if (milestone && project && session.currency === 'gbp' && (session.amount_total ?? 0) >= milestone.amount + fee) {
+        if (milestone && project && session.currency === STRIPE_CURRENCY && (session.amount_total ?? 0) >= amountDue(milestone) + fee) {
           await recordPayment(project, milestone, { method: 'card', fee, reference: session.id });
         } else {
           console.error(`[stripe] Session ${session.id} did not match a payable milestone`);

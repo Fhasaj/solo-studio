@@ -6,6 +6,8 @@ import { GetClientProject, ListContracts, ListHandoverFiles, ListInvoices, ListM
 import { GetSiteSettings } from "@/lib/query/settings.query";
 import { cardFee, describeMilestones, handoverReleased, isDeposit, supportEndsOn } from "@/lib/portal";
 import { GetBankDetails, hasBankDetails } from "@/lib/bankDetails";
+import { amountDue } from "@/lib/invoices";
+import { vatProfile } from "@/lib/finance";
 import { stripeReady } from "@/lib/stripe";
 import { formatDate, formatDateTime, formatPence, formatPounds, londonDay } from "@/lib/format";
 import RichText from "@/lib/richText";
@@ -91,7 +93,7 @@ export default async function PortalProjectPage({ params, searchParams }: { para
           <h2 id="costs-heading" className="text-lg font-FiraSans-Bold">Costs</h2>
           <dl className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="rounded-lg border border-borderColour bg-backgroundColour p-4">
-              <dt className="text-xs uppercase tracking-wider text-mutedColour">Total</dt>
+              <dt className="text-xs uppercase tracking-wider text-mutedColour">Total{vatProfile(settings).registered ? " (excluding VAT)" : ""}</dt>
               <dd className="mt-1 text-2xl font-FiraSans-ExtraBold text-textColour">{formatPence(project.totalPrice)}</dd>
             </div>
             <div className="rounded-lg border border-borderColour bg-backgroundColour p-4">
@@ -232,7 +234,8 @@ export default async function PortalProjectPage({ params, searchParams }: { para
       {due.map((milestone) => (
         <section key={milestone.id} className="mt-6 card p-6 border-warningColour/50" aria-labelledby={`due-${milestone.id}`}>
           <h2 id={`due-${milestone.id}`} className="text-lg font-FiraSans-Bold">
-            Payment due: {formatPence(milestone.amount)} for &ldquo;{milestone.title}&rdquo;
+            Payment due: {formatPence(amountDue(milestone))} for &ldquo;{milestone.title}&rdquo;
+            {amountDue(milestone) !== milestone.amount && <span className="text-sm font-FiraSans-Regular text-mutedColour"> (including VAT)</span>}
           </h2>
           {milestone.display === "payment_reported" ? (
             <p className="mt-2 text-mutedColour">Thanks, you told me this was sent on {formatDateTime(milestone.paymentReportedAt!)}. I&apos;ll confirm as soon as it arrives.</p>
@@ -266,7 +269,7 @@ export default async function PortalProjectPage({ params, searchParams }: { para
               <div className="mt-4">
                 <PostButton url="/api/portal/payment" body={{ milestoneId: milestone.id }} label="I've sent the payment" doneMessage="Thanks! I'll confirm once it arrives." />
               </div>
-              {cardAvailable && <CardPayment milestoneId={milestone.id} amount={milestone.amount} businessFee={cardFee(milestone.amount, settings)} />}
+              {cardAvailable && <CardPayment milestoneId={milestone.id} amount={amountDue(milestone)} businessFee={cardFee(amountDue(milestone), settings)} />}
             </>
           )}
         </section>

@@ -23,6 +23,7 @@ export default function InvoiceView({ invoice, bank }: { invoice: Invoice; bank:
           <p className="font-FiraSans-Bold text-textColour">{data.seller.name}</p>
           <p className="whitespace-pre-line text-mutedColour">{data.seller.address}</p>
           <p className="text-mutedColour">{data.seller.email}</p>
+          {data.seller.vatNumber && <p className="text-mutedColour">VAT number {data.seller.vatNumber}</p>}
         </div>
       </div>
 
@@ -64,6 +65,18 @@ export default function InvoiceView({ invoice, bank }: { invoice: Invoice; bank:
           ))}
         </tbody>
         <tfoot>
+          {data.vat && (
+            <>
+              <tr>
+                <td className="pt-4 text-mutedColour">Subtotal</td>
+                <td className="pt-4 text-right text-textColour">{formatPence(invoice.total - data.vat.amount)}</td>
+              </tr>
+              <tr>
+                <td className="pt-1 text-mutedColour">VAT at {data.vat.rate}%</td>
+                <td className="pt-1 text-right text-textColour">{formatPence(data.vat.amount)}</td>
+              </tr>
+            </>
+          )}
           <tr>
             <th className="pt-4 text-left font-FiraSans-Bold text-textColour">Total</th>
             <td className="pt-4 text-right text-lg font-FiraSans-ExtraBold text-textColour">{formatPence(invoice.total)}</td>
@@ -85,7 +98,9 @@ export default function InvoiceView({ invoice, bank }: { invoice: Invoice; bank:
         </div>
       )}
 
-      <p className="mt-6 text-xs text-mutedColour">{data.notes} Payment due within 14 days of the invoice date.</p>
+      <p className="mt-6 text-xs text-mutedColour">
+        {data.notes || (data.vat ? "" : "Not registered for VAT, so no VAT is charged.")} Payment due within 14 days of the invoice date.
+      </p>
     </article>
   );
 }
