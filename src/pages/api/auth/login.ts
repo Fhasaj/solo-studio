@@ -1,5 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { createPendingToken, PENDING_COOKIE, PENDING_MAX_AGE, safeEqual, sessionCookie } from '@/lib/auth';
+import { createPendingToken, PENDING_COOKIE, PENDING_MAX_AGE, sessionCookie } from '@/lib/auth';
+import { checkPassword } from '@/lib/adminSession';
 import { adminEmail, maskEmail, sendAdminCode } from '@/lib/adminCodes';
 import { clientIp } from '@/lib/rateLimit';
 
@@ -18,10 +19,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(429).json({ ok: false, error: 'Too many attempts. Try again later.' });
   }
 
-  const expected = process.env.ADMIN_PASSWORD;
   const { password } = req.body ?? {};
 
-  if (!expected || typeof password !== 'string' || !safeEqual(password, expected)) {
+  if (typeof password !== 'string' || !checkPassword(password)) {
     const current = entry && entry.resetAt > now ? entry : { count: 0, resetAt: now + WINDOW_MS };
     current.count += 1;
     attempts.set(ip, current);

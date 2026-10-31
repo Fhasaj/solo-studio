@@ -4,10 +4,11 @@
  * */
 
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { SESSION_COOKIE, verifySessionToken } from './auth';
+import { SESSION_COOKIE } from './auth';
+import { isValidAdminToken } from './adminSession';
 
 export async function requireAdmin(req: NextApiRequest, res: NextApiResponse) {
-  if (await verifySessionToken(req.cookies[SESSION_COOKIE])) return true;
+  if (await isValidAdminToken(req.cookies[SESSION_COOKIE])) return true;
   res.status(401).json({ ok: false, error: 'Unauthorised' });
   return false;
 }

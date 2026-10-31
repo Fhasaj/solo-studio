@@ -67,7 +67,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           `Before: ${before.bankAccountName || '-'}, ${before.bankSortCode || '-'}, ${before.bankAccountNumber || '-'}`,
           `After: ${after.bankAccountName}, ${after.bankSortCode}, ${after.bankAccountNumber}`,
           '',
-          "If this wasn't you, change ADMIN_PASSWORD and your email password straight away, then put the correct details back.",
+          "If this wasn't you, change your admin password (Admin → Account) and your email password straight away, then put the correct details back.",
         ].join('\n'),
       });
       return res.status(200).json({ ok: true, data: details(true) });

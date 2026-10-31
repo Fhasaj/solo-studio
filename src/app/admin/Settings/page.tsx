@@ -186,7 +186,7 @@ function SettingsGroup({ group, values, saved, onChange, onSaved }: GroupProps) 
   };
 
   return (
-    <form onSubmit={save} className="card p-6">
+    <form id={group} onSubmit={save} className="card p-6 scroll-mt-24">
       <h2 className="text-xl font-FiraSans-Bold text-textColour">{SETTING_GROUPS[group].label}</h2>
       <p className="mt-1 text-sm text-mutedColour">{SETTING_GROUPS[group].description}</p>
 

@@ -12,7 +12,8 @@ import {
 import { GetCaseStudy } from '@/lib/query/caseStudies.query';
 import { CONTENT_TYPES, isContentType, type ContentType, type FieldConfig } from '@/lib/content';
 import { requireAdmin } from '@/lib/requireAdmin';
-import { SESSION_COOKIE, verifySessionToken } from '@/lib/auth';
+import { SESSION_COOKIE } from '@/lib/auth';
+import { isValidAdminToken } from '@/lib/adminSession';
 import { readId, sendApiError, ValidationError } from '@/lib/validate';
 import { isValidSlug, slugify } from '@/lib/slug';
 import { pingIndexNow } from '@/lib/indexNow';
@@ -52,7 +53,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   // Visitors only see visible items; the admin also sees hidden ones
   if (req.method === 'GET') {
-    const isAdmin = await verifySessionToken(req.cookies[SESSION_COOKIE]);
+    const isAdmin = await isValidAdminToken(req.cookies[SESSION_COOKIE]);
     return res.status(200).json({ ok: true, data: GetContent(type, isAdmin) });
   }
 

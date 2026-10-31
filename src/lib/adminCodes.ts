@@ -10,7 +10,7 @@ import { safeEqual } from './auth';
 import { ExpireAdminCode, GetLiveAdminCode, InsertAdminCode, RecordAdminCodeAttempt } from './query/security.query';
 import { sendMail } from './mailer';
 
-export type CodePurpose = 'login' | 'bank';
+export type CodePurpose = 'login' | 'bank' | 'account';
 
 const LIFETIME_MS = 10 * 60_000;
 const MAX_ATTEMPTS = 5;
@@ -18,6 +18,7 @@ const MAX_ATTEMPTS = 5;
 const PURPOSE_TEXT: Record<CodePurpose, string> = {
   login: 'sign in to your website admin',
   bank: 'view or change the bank details on your website',
+  account: 'change your admin password',
 };
 
 export function adminEmail() {
@@ -49,14 +50,14 @@ export async function sendAdminCode(purpose: CodePurpose, context = '') {
   const sent = await sendMail({
     to,
     // The code stays out of the subject, so it doesn't show on a lock screen
-    subject: purpose === 'login' ? 'Your admin sign-in code' : 'Your code to unlock bank details',
+    subject: { login: 'Your admin sign-in code', bank: 'Your code to unlock bank details', account: 'Your code to change your admin password' }[purpose],
     text: [
       `Your code is: ${code}`,
       '',
       `Use it to ${PURPOSE_TEXT[purpose]}. It expires in 10 minutes and works once.`,
       context,
       '',
-      "If this wasn't you, someone may know your admin password: change ADMIN_PASSWORD straight away.",
+      "If this wasn't you, someone may know your admin password: change your admin password straight away (Admin → Account).",
     ]
       .filter((line) => line !== undefined)
       .join('\n'),

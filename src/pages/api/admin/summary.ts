@@ -6,6 +6,7 @@ import { ListCaseStudies } from '@/lib/query/caseStudies.query';
 import { GetContent } from '@/lib/query/content.query';
 import { sendApiError } from '@/lib/validate';
 import { buildWorkBoard } from '@/lib/portal';
+import { dashboardData } from '@/lib/dashboard';
 
 // Counts for the admin dashboard
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -26,6 +27,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         testimonials: { visible: testimonials.filter((t) => !t.isHidden).length, total: testimonials.length },
         board: buildWorkBoard(),
         nextCalls: ListBookings('upcoming').filter((b) => b.status === 'confirmed').slice(0, 5),
+        ...dashboardData(),
       },
     });
   } catch (err) {

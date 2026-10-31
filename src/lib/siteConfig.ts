@@ -11,6 +11,7 @@ import { isSettingKey, type SettingKey } from './siteSettings';
 const CONFIG_FILE = process.env.SITE_CONFIG || path.join(/*turbopackIgnore: true*/ process.cwd(), 'config', 'site.json');
 
 let cached: Partial<Record<SettingKey, string>> | null = null;
+let sections: Record<string, boolean> = {};
 
 export function configDefaults() {
   if (cached) return cached;
@@ -18,6 +19,10 @@ export function configDefaults() {
   try {
     if (fs.existsSync(/*turbopackIgnore: true*/ CONFIG_FILE)) {
       const raw = JSON.parse(fs.readFileSync(/*turbopackIgnore: true*/ CONFIG_FILE, 'utf8'));
+      // "$sections": { "cv": true } sets which site sections start switched on
+      if (raw.$sections && typeof raw.$sections === 'object') {
+        sections = Object.fromEntries(Object.entries(raw.$sections).filter(([, on]) => typeof on === 'boolean')) as Record<string, boolean>;
+      }
       for (const [key, value] of Object.entries(raw)) {
         // Unknown keys and non-text values are ignored rather than breaking the site
         if (isSettingKey(key) && (typeof value === 'string' || typeof value === 'number')) cached[key] = String(value);
@@ -28,4 +33,9 @@ export function configDefaults() {
     console.error(`[site config] Could not read ${CONFIG_FILE}:`, err);
   }
   return cached;
+}
+
+export function configSectionDefaults() {
+  configDefaults();
+  return sections;
 }

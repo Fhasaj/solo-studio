@@ -12,5 +12,7 @@ Optionally put a `site.json` here with starting values for any setting in Admin 
 }
 ```
 
+`"$sections": { "cv": true, "faq": false }` sets which site sections start switched on in a new install.
+
 Anything saved in the admin takes priority over this file. Bank details are never read from here: enter them in the
 admin, where they're stored encrypted.

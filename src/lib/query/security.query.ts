@@ -43,6 +43,26 @@ runMigrations(db, [
       db.prepare("DELETE FROM site_settings WHERE key IN ('bankAccountName', 'bankSortCode', 'bankAccountNumber')").run();
     },
   },
+  {
+    // Admin account: a password set in the admin (replacing ADMIN_PASSWORD), session versions and a sign-in log
+    id: '2026-11-01-admin-account',
+    up: (db) => {
+      db.exec(`
+        CREATE TABLE admin_state (
+          key VARCHAR(50) PRIMARY KEY,
+          value TEXT NOT NULL
+        );
+        INSERT INTO admin_state (key, value) VALUES ('sessionVersion', '1');
+
+        CREATE TABLE admin_logins (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          ip TEXT NOT NULL,
+          userAgent TEXT NOT NULL DEFAULT '',
+          at TEXT NOT NULL
+        );
+      `);
+    },
+  },
 ]);
 
 // ---- One-time codes ----
@@ -91,4 +111,27 @@ export function SaveSecureValues(values: Record<string, string>) {
   db.transaction(() => {
     for (const [key, value] of Object.entries(values)) upsert.run(key, value);
   })();
+}
+
+// ---- Admin account ----
+
+export function GetAdminState(key: 'sessionVersion' | 'passwordHash' | 'passwordChangedAt') {
+  const row = db.prepare('SELECT value FROM admin_state WHERE key = ?').get(key) as { value: string } | undefined;
+  return row?.value ?? null;
+}
+
+export function SetAdminState(key: 'sessionVersion' | 'passwordHash' | 'passwordChangedAt', value: string) {
+  db.prepare('INSERT INTO admin_state (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value').run(key, value);
+}
+
+export function LogAdminLogin(ip: string, userAgent: string) {
+  db.transaction(() => {
+    db.prepare('INSERT INTO admin_logins (ip, userAgent, at) VALUES (?, ?, ?)').run(ip, userAgent.slice(0, 300), new Date().toISOString());
+    // Keep the last 50
+    db.prepare('DELETE FROM admin_logins WHERE id NOT IN (SELECT id FROM admin_logins ORDER BY id DESC LIMIT 50)').run();
+  })();
+}
+
+export function ListAdminLogins() {
+  return db.prepare('SELECT ip, userAgent, at FROM admin_logins ORDER BY id DESC LIMIT 10').all() as { ip: string; userAgent: string; at: string }[];
 }

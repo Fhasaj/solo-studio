@@ -2,7 +2,7 @@ import { getDb } from '../dbConnect';
 import { runMigrations } from '../migrate';
 import { SECTION_DEFAULTS, type SectionKey, type SectionVisibility } from '../sections';
 import { SETTING_DEFAULTS, isSettingKey, type SettingKey, type SiteSettings } from '../siteSettings';
-import { configDefaults } from '../siteConfig';
+import { configDefaults, configSectionDefaults } from '../siteConfig';
 
 const db = getDb('settings');
 
@@ -32,8 +32,8 @@ runMigrations(db, [
 
 // Seed any section that has no row yet with its default
 const _seed = db.prepare('INSERT OR IGNORE INTO section_visibility (key, isVisible) VALUES (?, ?)');
-for (const [key, isVisible] of Object.entries(SECTION_DEFAULTS)) {
-  _seed.run(key, isVisible ? 1 : 0);
+for (const [key, isVisible] of Object.entries({ ...SECTION_DEFAULTS, ...configSectionDefaults() })) {
+  if (key in SECTION_DEFAULTS) _seed.run(key, isVisible ? 1 : 0);
 }
 
 const _getAll = db.prepare('SELECT key, isVisible FROM section_visibility');

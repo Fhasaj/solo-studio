@@ -65,12 +65,19 @@ async function verifyToken(token: string | undefined | null) {
   }
 }
 
-export function createSessionToken() {
-  return createToken("admin", SESSION_MAX_AGE);
+// "admin-<version>": bumping the version (sign out everywhere, password change) ends every older session
+export function createSessionToken(version: number) {
+  return createToken(`admin-${version}`, SESSION_MAX_AGE);
 }
 
+// Signature and expiry only (works in proxy.ts). Server routes also check the version: see adminSession.ts
 export async function verifySessionToken(token: string | undefined | null) {
-  return (await verifyToken(token)) === "admin";
+  return /^admin-\d+$/.test((await verifyToken(token)) ?? "");
+}
+
+export async function sessionVersionOf(token: string | undefined | null) {
+  const match = /^admin-(\d+)$/.exec((await verifyToken(token)) ?? "");
+  return match ? Number(match[1]) : null;
 }
 
 export function createClientSessionToken(clientId: number) {

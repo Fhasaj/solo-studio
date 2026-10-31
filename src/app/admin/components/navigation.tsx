@@ -1,86 +1,104 @@
 'use client';
 
-import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { MdOutlineDashboard, MdOutlineRateReview, MdOutlineDesignServices, MdOutlineFolder, MdOutlineWork, MdOutlineHome, MdOutlineLogout, MdOutlineCalendarMonth, MdOutlinePeople, MdOutlineSettings, MdOutlineFactory, MdOutlineQuiz, MdOutlineAccountBalance } from "react-icons/md";
-import { RxHamburgerMenu } from "react-icons/rx";
-import { IoClose } from "react-icons/io5";
+import {
+  MdOutlineDashboard,
+  MdOutlineRateReview,
+  MdOutlineDesignServices,
+  MdOutlineFolder,
+  MdOutlineWork,
+  MdOutlineCalendarMonth,
+  MdOutlinePeople,
+  MdOutlineSettings,
+  MdOutlineFactory,
+  MdOutlineQuiz,
+  MdOutlineAccountBalance,
+  MdOutlineManageAccounts,
+} from "react-icons/md";
 
-const links = [
-  { href: "/admin", label: "Dashboard", icon: MdOutlineDashboard },
-  { href: "/admin/Bookings", label: "Bookings", icon: MdOutlineCalendarMonth },
-  { href: "/admin/Clients", label: "Clients", icon: MdOutlinePeople },
-  { href: "/admin/Jobs", label: "Jobs", icon: MdOutlineWork },
-  { href: "/admin/Money", label: "Money", icon: MdOutlineAccountBalance },
-  { href: "/admin/CaseStudies", label: "Case studies", icon: MdOutlineFolder },
-  { href: "/admin/Services", label: "Services", icon: MdOutlineDesignServices },
-  { href: "/admin/Industries", label: "Industries", icon: MdOutlineFactory },
-  { href: "/admin/Testimonals", label: "Testimonials", icon: MdOutlineRateReview },
-  { href: "/admin/Faqs", label: "FAQs", icon: MdOutlineQuiz },
-  { href: "/admin/Settings", label: "Settings", icon: MdOutlineSettings },
+export const NAV_GROUPS = [
+  {
+    label: "Work",
+    links: [
+      { href: "/admin", label: "Dashboard", icon: MdOutlineDashboard },
+      { href: "/admin/Bookings", label: "Bookings", icon: MdOutlineCalendarMonth },
+      { href: "/admin/Clients", label: "Clients", icon: MdOutlinePeople },
+      { href: "/admin/Jobs", label: "Jobs", icon: MdOutlineWork },
+      { href: "/admin/Money", label: "Money", icon: MdOutlineAccountBalance },
+    ],
+  },
+  {
+    label: "Website",
+    links: [
+      { href: "/admin/CaseStudies", label: "Case studies", icon: MdOutlineFolder },
+      { href: "/admin/Services", label: "Services", icon: MdOutlineDesignServices },
+      { href: "/admin/Industries", label: "Industries", icon: MdOutlineFactory },
+      { href: "/admin/Testimonals", label: "Testimonials", icon: MdOutlineRateReview },
+      { href: "/admin/Faqs", label: "FAQs", icon: MdOutlineQuiz },
+    ],
+  },
+  {
+    label: "Settings",
+    links: [
+      { href: "/admin/Settings", label: "Site settings", icon: MdOutlineSettings },
+      { href: "/admin/Account", label: "Account", icon: MdOutlineManageAccounts },
+    ],
+  },
 ];
 
-export default function Navigation() {
+export function isActive(pathname: string | null, href: string) {
+  return pathname === href || (href !== "/admin" && Boolean(pathname?.startsWith(`${href}/`)));
+}
+
+// The sidebar: always visible on wide screens, a slide-in drawer on phones
+export default function Navigation({ open, onClose, brand }: { open: boolean; onClose: () => void; brand: string }) {
   const pathname = usePathname();
-  const [isOpen, setIsOpen] = useState(false);
-
-  const logout = async () => {
-    await fetch("/api/auth/logout", { method: "POST" });
-    window.location.href = "/admin/login";
-  };
-
-  const linkClass = (href: string) =>
-    `flex items-center gap-3 rounded-lg px-3 py-2.5 font-FiraSans-Medium transition duration-200 ${
-      pathname === href || (href !== "/admin" && href !== "/" && pathname?.startsWith(`${href}/`))
-        ? "bg-accentColour/15 text-accentColour"
-        : "text-mutedColour hover:bg-backgroundColour hover:text-textColour"
-    }`;
 
   return (
-    <aside className="no-print md:fixed md:inset-y-0 md:left-0 md:w-64 w-full bg-secondaryColour border-b md:border-b-0 md:border-r border-borderColour z-30">
-      <div className="flex items-center justify-between px-5 py-4 md:py-6">
-        <Link href="/admin" className="flex items-center gap-3">
-          <Image src="/images/logo.png" alt="" width={32} height={32} style={{ height: "auto" }} />
-          <span className="text-lg font-FiraSans-Bold text-textColour">Admin</span>
+    <>
+      {open && <div className="fixed inset-0 z-30 bg-black/50 md:hidden" onClick={onClose} aria-hidden />}
+      <aside
+        className={`no-print fixed inset-y-0 left-0 z-40 w-64 bg-secondaryColour border-r border-borderColour flex flex-col transition-transform duration-200 md:translate-x-0 ${open ? "translate-x-0" : "-translate-x-full"}`}
+        aria-label="Admin"
+      >
+        <Link href="/admin" className="flex items-center gap-3 px-5 h-16 border-b border-borderColour shrink-0" onClick={onClose}>
+          <Image src="/images/logo.png" alt="" width={30} height={30} style={{ height: "auto" }} />
+          <span className="min-w-0">
+            <span className="block truncate font-FiraSans-Bold text-textColour leading-tight">{brand}</span>
+            <span className="block text-xs text-mutedColour leading-tight">Admin</span>
+          </span>
         </Link>
-        <button
-          type="button"
-          aria-label={isOpen ? "Close menu" : "Open menu"}
-          className="md:hidden text-2xl text-textColour"
-          onClick={() => setIsOpen(!isOpen)}
-        >
-          {isOpen ? <IoClose /> : <RxHamburgerMenu />}
-        </button>
-      </div>
-
-      <nav className={`${isOpen ? "flex" : "hidden"} md:flex flex-col justify-between px-3 pb-4 md:h-[calc(100%-88px)]`}>
-        <ul className="flex flex-col gap-1">
-          {links.map(({ href, label, icon: Icon }) => (
-            <li key={href}>
-              <Link href={href} className={linkClass(href)} onClick={() => setIsOpen(false)}>
-                <Icon className="text-xl" />
-                {label}
-              </Link>
-            </li>
+        <nav className="flex-1 overflow-y-auto px-3 py-4">
+          {NAV_GROUPS.map((group) => (
+            <div key={group.label} className="mb-5">
+              <p className="px-3 mb-1.5 text-[11px] uppercase tracking-[0.15em] text-mutedColour/80 font-FiraSans-SemiBold">{group.label}</p>
+              <ul className="flex flex-col gap-0.5">
+                {group.links.map(({ href, label, icon: Icon }) => {
+                  const active = isActive(pathname, href);
+                  return (
+                    <li key={href}>
+                      <Link
+                        href={href}
+                        onClick={onClose}
+                        aria-current={active ? "page" : undefined}
+                        className={`relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-FiraSans-Medium transition ${
+                          active ? "bg-accentColour/15 text-accentColour" : "text-mutedColour hover:bg-backgroundColour hover:text-textColour"
+                        }`}
+                      >
+                        {active && <span className="absolute left-0 top-1.5 bottom-1.5 w-1 rounded-r bg-accentColour" aria-hidden />}
+                        <Icon className="text-lg shrink-0" />
+                        {label}
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
           ))}
-        </ul>
-        <ul className="flex flex-col gap-1 mt-6 pt-4 border-t border-borderColour">
-          <li>
-            <Link href="/" className={linkClass("/")}>
-              <MdOutlineHome className="text-xl" />
-              View site
-            </Link>
-          </li>
-          <li>
-            <button type="button" onClick={logout} className={`${linkClass("")} w-full`}>
-              <MdOutlineLogout className="text-xl" />
-              Log out
-            </button>
-          </li>
-        </ul>
-      </nav>
-    </aside>
+        </nav>
+      </aside>
+    </>
   );
 }

@@ -6,11 +6,12 @@
 
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { CLIENT_COOKIE, SESSION_COOKIE, verifyClientSessionToken, verifySessionToken } from './auth';
+import { CLIENT_COOKIE, SESSION_COOKIE, verifyClientSessionToken } from './auth';
+import { isValidAdminToken } from './adminSession';
 import { GetClient } from './query/clients.query';
 
 export async function isAdminSession() {
-  return verifySessionToken((await cookies()).get(SESSION_COOKIE)?.value);
+  return isValidAdminToken((await cookies()).get(SESSION_COOKIE)?.value);
 }
 
 export async function getPortalClient() {

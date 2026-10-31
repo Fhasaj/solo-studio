@@ -1,5 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { createSessionToken, PENDING_COOKIE, sessionCookie, SESSION_COOKIE, SESSION_MAX_AGE, verifyPendingToken } from '@/lib/auth';
+import { currentSessionVersion } from '@/lib/adminSession';
+import { LogAdminLogin } from '@/lib/query/security.query';
 import { verifyAdminCode } from '@/lib/adminCodes';
 import { clientIp, createRateLimiter } from '@/lib/rateLimit';
 
@@ -17,8 +19,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(401).json({ ok: false, error: "That code isn't right or has expired." });
   }
 
+  LogAdminLogin(clientIp(req), String(req.headers['user-agent'] ?? ''));
   res.setHeader('Set-Cookie', [
-    sessionCookie(SESSION_COOKIE, await createSessionToken(), SESSION_MAX_AGE, 'Strict'),
+    sessionCookie(SESSION_COOKIE, await createSessionToken(currentSessionVersion()), SESSION_MAX_AGE, 'Strict'),
     sessionCookie(PENDING_COOKIE, '', 0, 'Strict'),
   ]);
   return res.status(200).json({ ok: true });

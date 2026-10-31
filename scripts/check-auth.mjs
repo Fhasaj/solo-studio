@@ -6,7 +6,7 @@ const BASE = (process.env.BASE_URL || 'http://localhost:3000').replace(/\/$/, ''
 const ADMIN_PAGES = [
   '/admin', '/admin/Bookings', '/admin/Clients', '/admin/Clients/1', '/admin/Jobs', '/admin/Jobs/1',
   '/admin/CaseStudies', '/admin/CaseStudies/new', '/admin/CaseStudies/1', '/admin/Services', '/admin/Testimonals',
-  '/admin/Settings', '/admin/preview/work/1', '/admin/invoices/1', '/admin/Faqs', '/admin/Industries', '/admin/Money', '/admin/Money/Expenses', '/admin/Money/Bank', '/admin/Money/Vat', '/admin/Money/Rates',
+  '/admin/Settings', '/admin/preview/work/1', '/admin/invoices/1', '/admin/Faqs', '/admin/Industries', '/admin/Money', '/admin/Money/Expenses', '/admin/Money/Bank', '/admin/Money/Vat', '/admin/Money/Rates', '/admin/Account',
 ];
 
 const ADMIN_APIS = [
@@ -22,7 +22,7 @@ const ADMIN_APIS = [
   ['POST', '/api/content/services'], ['PUT', '/api/content/services'], ['POST', '/api/content/faqs'], ['PUT', '/api/content/industries'], ['PATCH', '/api/content/testimonials'], ['DELETE', '/api/content/testimonials'],
   ['PUT', '/api/settings/sections'],
   ['GET', '/api/admin/bank'], ['POST', '/api/admin/bank'], ['PUT', '/api/admin/bank'],
-  ['POST', '/api/admin/invoices'], ['PATCH', '/api/admin/invoices'], ['GET', '/api/admin/address-search?q=OX1'], ['GET', '/api/admin/finance/summary'], ['POST', '/api/admin/finance/expenses'], ['DELETE', '/api/admin/finance/expenses'], ['GET', '/api/admin/finance/receipt?id=1'], ['POST', '/api/admin/finance/receipt'], ['POST', '/api/admin/finance/records'], ['GET', '/api/admin/finance/bank'], ['POST', '/api/admin/finance/bank'], ['PATCH', '/api/admin/finance/bank'], ['PATCH', '/api/admin/finance/vat'], ['GET', '/api/admin/finance/rates?year=2026'], ['PUT', '/api/admin/finance/rates'], ['GET', '/api/admin/finance/export?kind=transactions'],
+  ['POST', '/api/admin/invoices'], ['PATCH', '/api/admin/invoices'], ['GET', '/api/admin/address-search?q=OX1'], ['GET', '/api/admin/finance/summary'], ['POST', '/api/admin/finance/expenses'], ['DELETE', '/api/admin/finance/expenses'], ['GET', '/api/admin/finance/receipt?id=1'], ['POST', '/api/admin/finance/receipt'], ['POST', '/api/admin/finance/records'], ['GET', '/api/admin/finance/bank'], ['POST', '/api/admin/finance/bank'], ['PATCH', '/api/admin/finance/bank'], ['PATCH', '/api/admin/finance/vat'], ['GET', '/api/admin/finance/rates?year=2026'], ['PUT', '/api/admin/finance/rates'], ['GET', '/api/admin/finance/export?kind=transactions'], ['GET', '/api/admin/account'], ['POST', '/api/admin/account'], ['GET', '/api/admin/search?q=test'],
   ['PUT', '/api/admin/handover'], ['DELETE', '/api/admin/handover'],
   // Outside the proxy (large uploads), guarded inside the route
   ['POST', '/api/upload/handover'],
