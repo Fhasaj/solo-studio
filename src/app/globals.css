@@ -1,0 +1,212 @@
+@config "../../tailwind.config.mjs";
+@import "tailwindcss";
+
+@theme {
+  --font-FiraSans-Regular: "FiraSans-Regular", sans-serif;
+  --font-FiraSans-Bold: "FiraSans-Bold", sans-serif;
+  --font-FiraSans-SemiBold: "FiraSans-SemiBold", sans-serif;
+  --font-FiraSans-ExtraBold: "FiraSans-ExtraBold", sans-serif;
+  --font-FiraSans-Medium: "FiraSans-Medium", sans-serif;
+  --font-FiraSans-Light: "FiraSans-Light", sans-serif;
+  --font-FiraSans-ExtraLight: "FiraSans-ExtraLight", sans-serif;
+  --font-FiraSans-Italic: "FiraSans-Italic", sans-serif;
+  --font-FiraSans-BoldItalic: "FiraSans-BoldItalic", sans-serif;
+  --font-FiraSans-MediumItalic: "FiraSans-MediumItalic", sans-serif;
+  --font-FiraSans-LightItalic: "FiraSans-LightItalic", sans-serif;
+
+  --color-backgroundColour: #1a1e25;
+  --color-secondaryColour: #242a33;
+  --color-borderColour: #323a46;
+  --color-textColour: #EEEEEE;
+  --color-mutedColour: #9aa4b2;
+  --color-accentColour: #38b0fa;
+  --color-successColour: #38fa7b;
+  --color-warningColour: #fac738;
+  --color-errorColour: #fa3838;
+
+  --cursor-fancy: url(/images/cursor/cursor2.png), auto;
+  --cursor-finger: url(/images/cursor/finger2.png), auto;
+
+  --background-image-accentColourGR: linear-gradient(
+    90deg,
+    rgba(56, 176, 250, 1) 0%,
+    rgba(47, 199, 250, 1) 35%,
+    rgba(29, 231, 249, 1) 100%
+  );
+}
+
+@font-face {
+  font-family: 'FiraSans-Regular';
+  src: url("/fonts/FiraSans-Regular.ttf") format('truetype');
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'FiraSans-Bold';
+  src: url("/fonts/FiraSans-Bold.ttf") format('truetype');
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'FiraSans-SemiBold';
+  src: url("/fonts/FiraSans-SemiBold.ttf") format('truetype');
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'FiraSans-ExtraBold';
+  src: url("/fonts/FiraSans-ExtraBold.ttf") format('truetype');
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'FiraSans-Medium';
+  src: url("/fonts/FiraSans-Medium.ttf") format('truetype');
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'FiraSans-Light';
+  src: url("/fonts/FiraSans-Light.ttf") format('truetype');
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'FiraSans-ExtraLight';
+  src: url("/fonts/FiraSans-ExtraLight.ttf") format('truetype');
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'FiraSans-Italic';
+  src: url("/fonts/FiraSans-Italic.ttf") format('truetype');
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'FiraSans-BoldItalic';
+  src: url("/fonts/FiraSans-BoldItalic.ttf") format('truetype');
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'FiraSans-MediumItalic';
+  src: url("/fonts/FiraSans-MediumItalic.ttf") format('truetype');
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'FiraSans-LightItalic';
+  src: url("/fonts/FiraSans-LightItalic.ttf") format('truetype');
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'FiraSans-ExtraLightItalic';
+  src: url("/fonts/FiraSans-ExtraLightItalic.ttf") format('truetype');
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'FiraSans-ExtraBoldItalic';
+  src: url("/fonts/FiraSans-ExtraBoldItalic.ttf") format('truetype');
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'FiraSans-SemiBoldItalic';
+  src: url("/fonts/FiraSans-SemiBoldItalic.ttf") format('truetype');
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'FiraSans-Black';
+  src: url("/fonts/FiraSans-Black.ttf") format('truetype');
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'FiraSans-BlackItalic';
+  src: url("/fonts/FiraSans-BlackItalic.ttf") format('truetype');
+  font-display: swap;
+}
+
+:root:has(.no-doc-scroll) {
+  overflow: hidden;
+}
+
+body {
+  font-family:'FiraSans-Regular', -apple-system, BlinkMacSystemFont, sans-serif;
+  background-color: #1a1e25;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  color: #eeeeee;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  overflow-x: hidden;
+}
+
+
+.section-container {
+  @apply w-full max-w-6xl mx-auto px-5 md:px-8 py-16 md:py-24;
+}
+
+.cv-container {
+  @apply w-full max-w-5xl mx-auto px-5 md:px-8 py-12 md:py-16 flex flex-col gap-14;
+}
+
+.cv-header {
+  @apply p-6 md:p-10;
+}
+
+.eyebrow {
+  @apply text-sm uppercase tracking-[0.2em] text-accentColour font-FiraSans-SemiBold;
+}
+
+.section-title {
+  @apply mt-2 text-3xl md:text-4xl font-FiraSans-ExtraBold text-textColour;
+}
+
+.card {
+  @apply bg-secondaryColour border border-borderColour rounded-xl transition duration-300 ease-in-out;
+}
+
+.chip {
+  @apply inline-block text-xs md:text-sm px-3 py-1 rounded-full bg-backgroundColour border border-borderColour text-mutedColour;
+}
+
+.btn-primary {
+  @apply inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg bg-accentColourGR text-backgroundColour font-FiraSans-Bold hover:opacity-90 hover:cursor-finger transition duration-300 ease-in-out;
+}
+
+.btn-secondary {
+  @apply inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg border border-borderColour text-textColour font-FiraSans-SemiBold hover:border-accentColour hover:text-accentColour hover:cursor-finger transition duration-300 ease-in-out;
+}
+
+@media print {
+  body {
+    background: #fff !important;
+    color: #000 !important;
+  }
+  .no-print {
+    display: none !important;
+  }
+  .print-plain,
+  .print-plain * {
+    background: transparent !important;
+    color: #000 !important;
+    border-color: #ccc !important;
+    box-shadow: none !important;
+  }
+  .print-plain a {
+    text-decoration: none;
+  }
+  .print-avoid-break {
+    break-inside: avoid;
+  }
+}
+
+.admin-input {
+  @apply w-full bg-backgroundColour text-textColour rounded-lg border border-borderColour py-3 px-4 leading-tight focus:outline-none focus:border-accentColour placeholder:text-mutedColour;
+}
